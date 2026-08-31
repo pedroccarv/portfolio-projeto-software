@@ -1,4 +1,4 @@
-   # Portfólio Profissional - Pedro Henrique
+# Portfólio Profissional - Pedro Henrique
 
 Website de portfólio profissional bilíngue (Português/Inglês) desenvolvido como requisito para a disciplina de Projeto de Software (Laboratório 1) do curso de Engenharia de Software da PUC Minas.
 
@@ -7,6 +7,23 @@ O sistema apresenta uma arquitetura Single Page Application (SPA), consumindo a 
 ## 🚀 Link de Acesso (Nuvem)
 
 - **Produção:** `[INSERIR LINK DA VERCEL/RENDER AQUI NO PASSO 4]`
+
+## 📸 Telas e Protótipos
+
+**Protótipo do Figma (Média Fidelidade - Sprint 01):**
+![Wireframe do Portfólio](print1.png)
+
+**Sistema em Execução (Sprint 03):**
+
+![Tela Inicial do Portfólio](print2.png)
+
+![Projetos](print3.png)
+
+![Experiência](print4.png)
+
+![Formulário de Contato](print5.png)
+
+![Versão em Inglês](print6.png)
 
 ## 🛠️ Tecnologias Utilizadas
 
