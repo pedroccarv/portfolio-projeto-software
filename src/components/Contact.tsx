@@ -1,175 +1,143 @@
-import { Github, Linkedin, Mail, MessageCircle, Send } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { Mail, MessageSquare, Linkedin, CheckCircle2, AlertCircle } from "lucide-react";
+import { useState, FormEvent } from "react";
 import { profile } from "../data/portfolio";
 import { useLang } from "../i18n";
 
-const copy = {
-  pt: {
-    label: "Contato",
-    title: "Vamos conversar",
-    subtitle: "Aberto a oportunidades, freelas e colaborações em projetos.",
-    name: "Nome",
-    email: "E-mail",
-    message: "Mensagem",
-    send: "Enviar mensagem",
-    errors: {
-      name: "Informe seu nome (mín. 2 caracteres).",
-      email: "Informe um e-mail válido.",
-      message: "A mensagem deve ter no mínimo 10 caracteres.",
-    },
-    success: "Abrimos seu app de e-mail com a mensagem pronta para envio.",
-  },
-  en: {
-    label: "Contact",
-    title: "Let's talk",
-    subtitle: "Open to opportunities, freelance work and project collaborations.",
-    name: "Name",
-    email: "Email",
-    message: "Message",
-    send: "Send message",
-    errors: {
-      name: "Enter your name (min. 2 characters).",
-      email: "Enter a valid email address.",
-      message: "The message must have at least 10 characters.",
-    },
-    success: "We opened your email app with the message ready to send.",
-  },
-} as const;
-
-type Errors = Partial<Record<"name" | "email" | "message", string>>;
-
-function isValidEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
 export function Contact() {
   const { lang } = useLang();
-  const c = copy[lang];
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
-  const [errors, setErrors] = useState<Errors>({});
-  const [sent, setSent] = useState(false);
+  // Controle de estado para dar feedback visual sem sair da tela
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
-  const channels = [
-    { icon: Mail, label: "E-mail", value: profile.email, href: `mailto:${profile.email}` },
-    {
-      icon: MessageCircle,
-      label: "WhatsApp",
-      value: `+${profile.whatsapp}`,
-      href: `https://wa.me/${profile.whatsapp}`,
-    },
-    { icon: Linkedin, label: "LinkedIn", value: "/pedro-soares", href: profile.linkedin },
-    { icon: Github, label: "GitHub", value: "/pssgarcia", href: profile.github },
-  ];
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setStatus("loading");
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    const next: Errors = {};
-    if (form.name.trim().length < 2) next.name = c.errors.name;
-    if (!isValidEmail(form.email.trim())) next.email = c.errors.email;
-    if (form.message.trim().length < 10) next.message = c.errors.message;
+    const form = e.currentTarget;
+    const formData = new FormData(form);
 
-    if (Object.keys(next).length > 0) {
-      setErrors(next);
-      setSent(false);
-      return;
+    try {
+      // O segredo está no /ajax/ na URL da requisição
+      const response = await fetch(`https://formsubmit.co/ajax/${profile.email}`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        setStatus("success");
+        form.reset();
+        // Volta ao estado normal após 5 segundos
+        setTimeout(() => setStatus("idle"), 5000);
+      } else {
+        setStatus("error");
+      }
+    } catch (error) {
+      setStatus("error");
     }
-
-    setErrors({});
-    const subject = encodeURIComponent(`[Portfólio] ${form.name}`);
-    const body = encodeURIComponent(`${form.message}\n\n---\n${form.name} — ${form.email}`);
-    window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`;
-    setSent(true);
-    setForm({ name: "", email: "", message: "" });
   };
 
-  const field =
-    "mt-2 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary";
-
   return (
-    <section className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-      <p className="mono-label">{c.label}</p>
-      <h1 className="mt-3 text-3xl font-bold sm:text-5xl">{c.title}</h1>
-      <p className="mt-4 max-w-xl text-muted-foreground">{c.subtitle}</p>
-
-      <div className="mt-12 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-          {channels.map((channel) => (
-            <a
-              key={channel.label}
-              href={channel.href}
-              target={channel.href.startsWith("http") ? "_blank" : undefined}
-              rel="noreferrer"
-              className="card-elevated grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 p-5 transition-colors hover:border-primary"
-            >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted text-primary">
-                <channel.icon className="h-5 w-5" />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-sm font-medium">{channel.label}</span>
-                <span className="block truncate text-xs text-muted-foreground">
-                  {channel.value}
-                </span>
-              </span>
+    <div className="mx-auto max-w-6xl px-5 py-16">
+      <h2 className="mb-8 text-2xl font-bold sm:text-3xl">
+        {lang === "pt" ? "Contato" : "Contact"}
+      </h2>
+      <div className="grid gap-10 lg:grid-cols-2">
+        <div className="space-y-6">
+          <p className="text-muted-foreground">
+            {lang === "pt"
+              ? "Sinta-se à vontade para entrar em contato comigo para oportunidades, dúvidas ou apenas para um bate-papo técnico."
+              : "Feel free to reach out to me for opportunities, questions, or just a tech chat."}
+          </p>
+          <div className="flex flex-col gap-4">
+            <a href={`mailto:${profile.email}`} className="flex items-center gap-3 text-muted-foreground transition-colors hover:text-primary">
+              <Mail className="h-5 w-5" />
+              <span>{profile.email}</span>
             </a>
-          ))}
+            <a href={`https://wa.me/${profile.whatsapp}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-muted-foreground transition-colors hover:text-primary">
+              <MessageSquare className="h-5 w-5" />
+              <span>WhatsApp</span>
+            </a>
+            <a href={profile.linkedin} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-muted-foreground transition-colors hover:text-primary">
+              <Linkedin className="h-5 w-5" />
+              <span>LinkedIn</span>
+            </a>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="card-elevated p-6 sm:p-8" noValidate>
+        <form
+          onSubmit={handleSubmit}
+          className="card-elevated flex flex-col gap-4 border border-border/60 p-6 relative overflow-hidden"
+        >
+          {/* Inputs invisíveis para configuração do e-mail */}
+          <input type="hidden" name="_subject" value="Novo contato via Portfólio!" />
+          <input type="hidden" name="_template" value="box" />
+          
           <div>
-            <label htmlFor="name" className="text-sm font-medium">
-              {c.name}
+            <label htmlFor="name" className="mb-2 block text-sm font-medium">
+              {lang === "pt" ? "Nome" : "Name"}
             </label>
             <input
+              type="text"
+              name="name"
               id="name"
-              value={form.name}
-              maxLength={100}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className={field}
+              required
+              disabled={status === "loading"}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
             />
-            {errors.name && <p className="mt-1.5 text-xs text-destructive">{errors.name}</p>}
           </div>
-
-          <div className="mt-5">
-            <label htmlFor="email" className="text-sm font-medium">
-              {c.email}
+          <div>
+            <label htmlFor="email" className="mb-2 block text-sm font-medium">
+              E-mail
             </label>
             <input
-              id="email"
               type="email"
-              value={form.email}
-              maxLength={255}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className={field}
+              name="email"
+              id="email"
+              required
+              disabled={status === "loading"}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
             />
-            {errors.email && <p className="mt-1.5 text-xs text-destructive">{errors.email}</p>}
           </div>
-
-          <div className="mt-5">
-            <label htmlFor="message" className="text-sm font-medium">
-              {c.message}
+          <div>
+            <label htmlFor="message" className="mb-2 block text-sm font-medium">
+              {lang === "pt" ? "Mensagem" : "Message"}
             </label>
             <textarea
+              name="message"
               id="message"
-              rows={5}
-              value={form.message}
-              maxLength={1000}
-              onChange={(e) => setForm({ ...form, message: e.target.value })}
-              className={field + " resize-y"}
-            />
-            {errors.message && <p className="mt-1.5 text-xs text-destructive">{errors.message}</p>}
+              rows={4}
+              required
+              disabled={status === "loading"}
+              className="w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+            ></textarea>
           </div>
-
+          
           <button
             type="submit"
-            className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            disabled={status === "loading"}
+            className="mt-2 flex w-full items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            <Send className="h-4 w-4" />
-            {c.send}
+            {status === "loading" 
+              ? (lang === "pt" ? "Enviando..." : "Sending...") 
+              : (lang === "pt" ? "Enviar Mensagem" : "Send Message")}
           </button>
 
-          {sent && <p className="mt-4 text-sm text-primary">{c.success}</p>}
+          {status === "success" && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm text-green-500">
+              <CheckCircle2 className="h-12 w-12 mb-2" />
+              <p className="font-medium text-lg">
+                {lang === "pt" ? "Mensagem enviada!" : "Message sent!"}
+              </p>
+            </div>
+          )}
+
+          {status === "error" && (
+            <p className="text-red-500 text-sm flex items-center gap-2 mt-2">
+              <AlertCircle className="h-4 w-4" />
+              {lang === "pt" ? "Erro ao enviar mensagem. Tente novamente." : "Error sending message. Try again."}
+            </p>
+          )}
         </form>
       </div>
-    </section>
+    </div>
   );
 }
